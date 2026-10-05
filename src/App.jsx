@@ -3,6 +3,7 @@ import heroImg from "./assets/hero.png";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "./assets/vite.svg";
 import "./App.css";
+import Beat from "./beat";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -10,8 +11,10 @@ function App() {
   return (
     <>
       <section id="center">
+        <Beat />
         {/* <div className="beat bg-red-500">h</div>
          */}
+        {/* 
         <div className="beat">
           <div className="beatCore">beat</div>
           <div className="beatStroke1"></div>
@@ -21,7 +24,7 @@ function App() {
           <div className="beatStroke5"></div>
           <div className="beatStroke6"></div>
           <div className="beatStroke7"></div>
-        </div>
+        </div> */}
         {/* 
           <img src={heroImg} className="base" width="170" height="179" alt="" />
           <img src={reactLogo} className="framework" alt="React logo" />
