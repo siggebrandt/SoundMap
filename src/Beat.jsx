@@ -19,9 +19,9 @@ const BASS_BINS = 10;
 const BIN_LO = 30; // lägsta frekvensbin (~65 Hz)
 const BIN_HI = 300; // högsta frekvensbin (~6,5 kHz)
 const TILT = 0.5; // var 1.2
-const FLOOR = 0.35; // allt under denna nivå (0–1) räknas som tyst
-const CURVE = 1.8; // >1 trycker ner små värden så toppar sticker ut
-const GAIN = 1.0; // total förstärkning av utslagen
+const FLOOR = 0.45; // allt under denna nivå (0–1) räknas som tyst
+const CURVE = 2.0; // >1 trycker ner små värden så toppar sticker ut
+const GAIN = 0.7; // total förstärkning av utslagen
 // =========================
 
 const AXIS_MAX = MAX_R + 50;
@@ -108,7 +108,9 @@ export default function Beat({ src = "/music/track.mp3" }) {
       let bass = 0;
       for (let k = 0; k < BASS_BINS; k++) bass += freq[k];
       bass = bass / BASS_BINS / 255;
-      level = bass > level ? bass : level * 0.9;
+      bass = Math.max(0, (bass - FLOOR) / (1 - FLOOR));
+      bass = Math.pow(bass, CURVE) * GAIN;
+      level += (bass - level) * (bass > level ? 0.2 : 0.1);
 
       const core = coreRef.current;
       if (core) {
