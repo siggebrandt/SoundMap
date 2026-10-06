@@ -4,6 +4,8 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "./assets/vite.svg";
 import "./App.css";
 import Beat from "./beat";
+import Beat1 from "./Beat1";
+import Beat2 from "./Beat2";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -11,6 +13,8 @@ function App() {
   return (
     <>
       <Beat />
+      <Beat1 />
+      <Beat2 />
       <section id="center">
         {/* <div className="beat bg-red-500">h</div>
          */}
