@@ -71,6 +71,8 @@ export default function Beat({ src = "/music/track.mp3" }) {
 
     const opt = wave.chartOption;
     opt.radiusAxis.max = AXIS_MAX;
+    opt.backgroundColor = "transparent";
+    opt.polar.backgroundColor = "transparent";
 
     // Fyll området innanför vågformen och behåll en tydlig ytterlinje.
     opt.series[0].data = Array.from({ length: 361 }, (_, a) => [MIN_R, a]);
@@ -184,6 +186,7 @@ export default function Beat({ src = "/music/track.mp3" }) {
           width: SIZE,
           height: SIZE,
           background: "transparent",
+          transform: "translate(var(--beat-offset-x), var(--beat-offset-y))",
         }}
       >
         <div ref={elRef} style={{ width: "100%", height: "100%" }} />
