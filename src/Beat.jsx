@@ -6,7 +6,7 @@ const SIZE = 600;
 const POINTS = 48; // måste vara jämnt
 const MIN_R = 100;
 const MAX_R = 240;
-const INNER_BASE_SCALE = 0.95;
+const INNER_BASE_SCALE = 0.75;
 const INNER_MOTION = 1;
 const SMOOTH = 0.35;
 const INNER_SMOOTH = 0.8;
@@ -15,6 +15,8 @@ const LINE_WIDTH = 0;
 // Formen på linjen
 const BIN_LO = 30; // lägsta frekvensbin (~65 Hz)
 const BIN_HI = 300; // högsta frekvensbin (~6,5 kHz)
+const INNER_BIN_LO = 6;
+const INNER_BIN_HI = 30;
 const TILT = 0.5; // var 1.2
 const FLOOR = 0.45; // allt under denna nivå (0–1) räknas som tyst
 const CURVE = 2.0; // >1 trycker ner små värden så toppar sticker ut
@@ -25,12 +27,27 @@ const AXIS_MAX = MAX_R + 50;
 
 // Härledda värden: måste ligga efter konstanterna ovan
 const HALF = POINTS / 2;
-const bandRanges = Array.from({ length: HALF + 1 }, (_, b) => {
-  const f = (x) => BIN_LO * Math.pow(BIN_HI / BIN_LO, x / (HALF + 1));
-  const s = Math.floor(f(b));
-  const e = Math.max(s + 1, Math.floor(f(b + 1)));
-  return [s, e];
-});
+const createBandRanges = (binLo, binHi) =>
+  Array.from({ length: HALF + 1 }, (_, b) => {
+    const f = (x) => binLo * Math.pow(binHi / binLo, x / (HALF + 1));
+    const s = Math.floor(f(b));
+    const e = Math.max(s + 1, Math.floor(f(b + 1)));
+    return [s, e];
+  });
+const bandRanges = createBandRanges(BIN_LO, BIN_HI);
+const innerBandRanges = createBandRanges(INNER_BIN_LO, INNER_BIN_HI);
+
+const getBandValues = (freq, ranges) =>
+  ranges.map(([s, e], b) => {
+    let sum = 0;
+    for (let k = s; k < e; k++) sum += freq[k];
+
+    let value = sum / (e - s) / 255;
+    value = Math.max(0, (value - FLOOR) / (1 - FLOOR));
+    value = Math.pow(value, CURVE);
+    value *= (1 + TILT * (b / HALF)) * GAIN;
+    return Math.min(1, value);
+  });
 
 export default function Beat({ src = "/music/track.mp3" }) {
   const elRef = useRef(null);
@@ -98,17 +115,8 @@ export default function Beat({ src = "/music/track.mp3" }) {
     });
 
     wave._generateWaveData = function (freq) {
-      // 1. Ett värde (0–1) per frekvensband, logaritmiskt fördelade
-      const bandVal = bandRanges.map(([s, e], b) => {
-        let sum = 0;
-        for (let k = s; k < e; k++) sum += freq[k];
-
-        let v = sum / (e - s) / 255; // 0–1
-        v = Math.max(0, (v - FLOOR) / (1 - FLOOR)); // ta bort "golvet"
-        v = Math.pow(v, CURVE); // gör toppar tydligare
-        v = v * (1 + TILT * (b / HALF)) * GAIN; // tilt efter grinden, så brus inte förstärks
-        return Math.min(1, v);
-      });
+      const bandVal = getBandValues(freq, bandRanges);
+      const innerBandVal = getBandValues(freq, innerBandRanges);
 
       // 2. Spegla runt cirkeln: band 0 (bas) nederst, högsta bandet överst
       const data = [];
@@ -123,7 +131,7 @@ export default function Beat({ src = "/music/track.mp3" }) {
         data.push([r, (360 / POINTS) * j]);
         const innerR =
           this.minChartValue * INNER_BASE_SCALE +
-          bandVal[d] *
+          innerBandVal[d] *
             (this.maxChartValue - this.minChartValue) *
             INNER_BASE_SCALE *
             INNER_MOTION;
