@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 const COLOR = "rgba(255, 126, 182, 0.55)"; // används av både linje och kärna
 const INNER_COLOR = "rgba(255, 126, 182, 0.10)";
+const CORE_COLOR = "rgba(194, 155, 255, 0.18)";
 const SIZE = 100;
 const POINTS = 48; // måste vara jämnt
 const MIN_R = 100;
@@ -17,6 +18,9 @@ const BIN_LO = 30; // lägsta frekvensbin (~65 Hz)
 const BIN_HI = 300; // högsta frekvensbin (~6,5 kHz)
 const INNER_BIN_LO = 6;
 const INNER_BIN_HI = 30;
+const CORE_BIN_LO = 1;
+const CORE_BIN_HI = 6;
+const CORE_BASE_SCALE = 0.48;
 const TILT = 0.5; // var 1.2
 const FLOOR = 0.45; // allt under denna nivå (0–1) räknas som tyst
 const CURVE = 2.0; // >1 trycker ner små värden så toppar sticker ut
@@ -36,6 +40,7 @@ const createBandRanges = (binLo, binHi) =>
   });
 const bandRanges = createBandRanges(BIN_LO, BIN_HI);
 const innerBandRanges = createBandRanges(INNER_BIN_LO, INNER_BIN_HI);
+const coreBandRanges = createBandRanges(CORE_BIN_LO, CORE_BIN_HI);
 
 const getBandValues = (freq, ranges) =>
   ranges.map(([s, e], b) => {
@@ -115,14 +120,40 @@ export default function Beat({ src = "/music/track.mp3" }) {
       hoverAnimation: false,
       z: 3,
     });
+    opt.series.push({
+      coordinateSystem: "polar",
+      name: "core-wave",
+      type: "line",
+      showSymbol: false,
+      smooth: INNER_SMOOTH,
+      areaStyle: {
+        color: CORE_COLOR,
+        opacity: 1,
+      },
+      lineStyle: {
+        color: CORE_COLOR,
+        width: LINE_WIDTH,
+        shadowColor: CORE_COLOR,
+        shadowBlur: 12,
+      },
+      data: Array.from({ length: 361 }, (_, a) => [
+        MIN_R * CORE_BASE_SCALE,
+        a,
+      ]),
+      silent: true,
+      hoverAnimation: false,
+      z: 4,
+    });
 
     wave._generateWaveData = function (freq) {
       const bandVal = getBandValues(freq, bandRanges);
       const innerBandVal = getBandValues(freq, innerBandRanges);
+      const coreBandVal = getBandValues(freq, coreBandRanges);
 
       // 2. Spegla runt cirkeln: band 0 (bas) nederst, högsta bandet överst
       const data = [];
       const innerData = [];
+      const coreData = [];
       let maxR = 0;
       for (let j = 0; j < POINTS; j++) {
         const d = Math.abs(j - HALF); // 0 = nederst, HALF = överst
@@ -138,10 +169,18 @@ export default function Beat({ src = "/music/track.mp3" }) {
             INNER_BASE_SCALE *
             INNER_MOTION;
         innerData.push([innerR, (360 / POINTS) * j]);
+        const coreR =
+          this.minChartValue * CORE_BASE_SCALE +
+          coreBandVal[d] *
+            (this.maxChartValue - this.minChartValue) *
+            CORE_BASE_SCALE;
+        coreData.push([coreR, (360 / POINTS) * j]);
       }
       data.push([data[0][0], 360]); // stäng cirkeln (samma värde som j=0, ingen spets)
       innerData.push([innerData[0][0], 360]);
+      coreData.push([coreData[0][0], 360]);
       this.chartOption.series[3].data = innerData;
+      this.chartOption.series[4].data = coreData;
 
       return { maxR, data };
     };
@@ -172,7 +211,7 @@ export default function Beat({ src = "/music/track.mp3" }) {
 
   const handlePlay = async () => {
     const wave = waveRef.current;
-    if (!wave) return;
+    if (!wave || !ready || started) return;
     await wave.context.resume();
     wave.play();
     setStarted(true);
@@ -180,21 +219,25 @@ export default function Beat({ src = "/music/track.mp3" }) {
 
   return (
     <div>
-      <div
+      <button
+        type="button"
+        onClick={handlePlay}
+        disabled={!ready || started}
+        aria-label={ready ? "Play beat" : "Loading beat"}
         style={{
           position: "relative",
           width: SIZE,
           height: SIZE,
           background: "transparent",
           transform: "translate(var(--beat-offset-x), var(--beat-offset-y))",
+          border: 0,
+          padding: 0,
+          cursor: ready && !started ? "pointer" : "default",
         }}
       >
         <div ref={elRef} style={{ width: "100%", height: "100%" }} />
-      </div>
-
-      <button onClick={handlePlay} disabled={!ready || started}>
-        {ready ? "Play" : "Laddar ljud..."}
       </button>
+      {!ready && <p role="status">Laddar ljud...</p>}
     </div>
   );
 }
