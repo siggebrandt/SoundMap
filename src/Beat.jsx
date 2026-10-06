@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-// ====== Justera här ======
-const COLOR = "#ff7eb6";
-const INNER_COLOR = "#a855f7";
+const COLOR = "rgba(255, 126, 182, 0.55)"; // används av både linje och kärna
+const INNER_COLOR = "rgba(168, 85, 247, 0.55)";
 const SIZE = 600;
 const POINTS = 48; // måste vara jämnt
 const MIN_R = 100;
