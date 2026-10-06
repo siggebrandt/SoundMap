@@ -165,10 +165,7 @@ export default function Beat({ src = "/music/track.mp3" }) {
     wave._generateWaveData = function (freq) {
       const bandVal = smoothBandValues(getBandValues(freq, bandRanges));
       const innerBandVal = smoothBandValues(
-        blendWithOuterBeat(
-          getBandValues(freq, innerBandRanges),
-          bandVal,
-        ),
+        blendWithOuterBeat(getBandValues(freq, innerBandRanges), bandVal),
       );
       const coreBandVal = smoothBandValues(
         blendWithOuterBeat(getBandValues(freq, coreBandRanges), bandVal),
@@ -187,8 +184,7 @@ export default function Beat({ src = "/music/track.mp3" }) {
         if (r > maxR) maxR = r;
         data.push([r, (360 / POINTS) * j]);
         const innerR =
-          (BASE_RADIUS +
-            innerBandVal[d] * (MAX_RADIUS - BASE_RADIUS)) *
+          (BASE_RADIUS + innerBandVal[d] * (MAX_RADIUS - BASE_RADIUS)) *
           BASE_SIZE_SCALE *
           INNER_BASE_SCALE;
         innerData.push([innerR, (360 / POINTS) * j]);
@@ -259,7 +255,7 @@ export default function Beat({ src = "/music/track.mp3" }) {
       >
         <div ref={elRef} style={{ width: "100%", height: "100%" }} />
       </button>
-      {!ready && <p role="status">Laddar ljud...</p>}
+      {!ready && <p role="status">{/* Laddar ljud... */}</p>}
     </div>
   );
 }
