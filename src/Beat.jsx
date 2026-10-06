@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 
-// ====== Justera här ======
 const COLOR = "rgba(255, 126, 182, 0.55)"; // används av både linje och kärna
+const INNER_COLOR = "rgba(168, 85, 247, 0.55)";
 const SIZE = 600;
 const POINTS = 48; // måste vara jämnt
 const MIN_R = 100;
 const MAX_R = 240;
+const INNER_MIN_R = 48;
+const INNER_MAX_R = 78;
 const SMOOTH = 0.35;
+const INNER_SMOOTH = 0.8;
 const LINE_WIDTH = 2;
 
 // Formen på linjen
@@ -69,6 +72,27 @@ export default function Beat({ src = "/music/track.mp3" }) {
     // Ingen yttre linje, och dölj originalkärnan
     opt.series[1].lineStyle = { opacity: 0, width: 0, shadowBlur: 0 };
     opt.series[2].symbolSize = 0;
+    opt.series.push({
+      coordinateSystem: "polar",
+      name: "inner-wave",
+      type: "line",
+      showSymbol: false,
+      smooth: INNER_SMOOTH,
+      areaStyle: {
+        color: INNER_COLOR,
+        opacity: 1,
+      },
+      lineStyle: {
+        color: INNER_COLOR,
+        width: LINE_WIDTH,
+        shadowColor: INNER_COLOR,
+        shadowBlur: 12,
+      },
+      data: Array.from({ length: 361 }, (_, a) => [INNER_MIN_R, a]),
+      silent: true,
+      hoverAnimation: false,
+      z: 3,
+    });
 
     wave._generateWaveData = function (freq) {
       // 1. Ett värde (0–1) per frekvensband, logaritmiskt fördelade
@@ -85,6 +109,7 @@ export default function Beat({ src = "/music/track.mp3" }) {
 
       // 2. Spegla runt cirkeln: band 0 (bas) nederst, högsta bandet överst
       const data = [];
+      const innerData = [];
       let maxR = 0;
       for (let j = 0; j < POINTS; j++) {
         const d = Math.abs(j - HALF); // 0 = nederst, HALF = överst
@@ -93,8 +118,14 @@ export default function Beat({ src = "/music/track.mp3" }) {
           this.minChartValue;
         if (r > maxR) maxR = r;
         data.push([r, (360 / POINTS) * j]);
+        const innerR =
+          INNER_MIN_R +
+          bandVal[d] * (INNER_MAX_R - INNER_MIN_R);
+        innerData.push([innerR, (360 / POINTS) * j]);
       }
       data.push([data[0][0], 360]); // stäng cirkeln (samma värde som j=0, ingen spets)
+      innerData.push([innerData[0][0], 360]);
+      this.chartOption.series[3].data = innerData;
 
       return { maxR, data };
     };
