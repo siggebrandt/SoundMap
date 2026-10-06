@@ -5,11 +5,11 @@
   --text-h: #08060d;
   --bg: #fff;
   /* Put your image in public/ and adjust these values to position it. */
-  --page-background-image: url("/background.jpg");
+  --page-background-image: url("/background.webp");
   --page-background-position: 50% 50%;
   --page-background-size: cover;
-  --beat-offset-x: 0px;
-  --beat-offset-y: 0px;
+  --beat-offset-x: 00px;
+  --beat-offset-y: -80px;
   --border: #e5e4e7;
   --code-bg: #f4f3ec;
   --accent: #aa3bff;
