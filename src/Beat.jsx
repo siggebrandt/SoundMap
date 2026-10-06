@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const COLOR = "rgba(255, 126, 182, 0.55)"; // används av både linje och kärna
-const INNER_COLOR = "rgba(168, 85, 247, 0.55)";
+const INNER_COLOR = "rgba(255, 126, 182, 0.10)";
 const SIZE = 600;
 const POINTS = 48; // måste vara jämnt
 const MIN_R = 100;
@@ -88,10 +88,10 @@ export default function Beat({ src = "/music/track.mp3" }) {
         shadowColor: INNER_COLOR,
         shadowBlur: 12,
       },
-      data: Array.from(
-        { length: 361 },
-        (_, a) => [MIN_R * INNER_BASE_SCALE, a],
-      ),
+      data: Array.from({ length: 361 }, (_, a) => [
+        MIN_R * INNER_BASE_SCALE,
+        a,
+      ]),
       silent: true,
       hoverAnimation: false,
       z: 3,
