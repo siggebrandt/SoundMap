@@ -10,8 +10,8 @@ function App() {
 
   return (
     <>
+      <Beat />
       <section id="center">
-        <Beat />
         {/* <div className="beat bg-red-500">h</div>
          */}
         {/* 

@@ -88,6 +88,11 @@ export default function Beat({ src = "/music/track.mp3" }) {
     wave.maxChartValue = MAX_RADIUS;
 
     const opt = wave.chartOption;
+    opt.animation = false;
+    opt.animationDuration = 0;
+    opt.animationDurationUpdate = 0;
+    opt.animationEasing = "linear";
+
     opt.radiusAxis.min = 0;
     opt.radiusAxis.max = SIZE / 2;
     opt.backgroundColor = "transparent";

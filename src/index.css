@@ -8,8 +8,8 @@
   --page-background-image: url("/background.webp");
   --page-background-position: 50% 50%;
   --page-background-size: cover;
-  --beat-offset-x: 00px;
-  --beat-offset-y: -80px;
+  --beat-offset-x: 0px;
+  --beat-offset-y: 180px;
   --border: #e5e4e7;
   --code-bg: #f4f3ec;
   --accent: #aa3bff;
@@ -17,7 +17,7 @@
   --accent-border: rgba(170, 59, 255, 0.5);
   --social-bg: rgba(244, 243, 236, 0.5);
   --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+    rgba(167, 39, 39, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
   --sans: system-ui, "Segoe UI", Roboto, sans-serif;
   --heading: system-ui, "Segoe UI", Roboto, sans-serif;
@@ -75,7 +75,8 @@ body {
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
-  border-inline: 1px solid var(--border);
+  /*   border-inline: 1px solid var(--border);
+ */
   min-height: 100svh;
   display: flex;
   flex-direction: column;
