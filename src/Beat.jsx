@@ -10,7 +10,7 @@ const INNER_BASE_SCALE = 0.95;
 const INNER_MOTION = 0.2;
 const SMOOTH = 0.35;
 const INNER_SMOOTH = 0.8;
-const LINE_WIDTH = 2;
+const LINE_WIDTH = 0;
 
 // Formen på linjen
 const BIN_LO = 30; // lägsta frekvensbin (~65 Hz)
