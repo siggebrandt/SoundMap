@@ -7,8 +7,9 @@ const SIZE = 100;
 const POINTS = 48; // måste vara jämnt
 const MIN_R = 100;
 const MAX_R = 240;
+const OUTER_MOTION = 1.25;
 const INNER_BASE_SCALE = 0.75;
-const INNER_MOTION = 1;
+const INNER_MOTION = 1.25;
 const SMOOTH = 0.35;
 const INNER_SMOOTH = 0.8;
 const LINE_WIDTH = 0;
@@ -21,6 +22,7 @@ const INNER_BIN_HI = 30;
 const CORE_BIN_LO = 1;
 const CORE_BIN_HI = 6;
 const CORE_BASE_SCALE = 0.48;
+const CORE_MOTION = 1.25;
 const TILT = 0.5; // var 1.2
 const FLOOR = 0.45; // allt under denna nivå (0–1) räknas som tyst
 const CURVE = 2.0; // >1 trycker ner små värden så toppar sticker ut
@@ -158,7 +160,9 @@ export default function Beat({ src = "/music/track.mp3" }) {
       for (let j = 0; j < POINTS; j++) {
         const d = Math.abs(j - HALF); // 0 = nederst, HALF = överst
         const r =
-          bandVal[d] * (this.maxChartValue - this.minChartValue) +
+          bandVal[d] *
+            (this.maxChartValue - this.minChartValue) *
+            OUTER_MOTION +
           this.minChartValue;
         if (r > maxR) maxR = r;
         data.push([r, (360 / POINTS) * j]);
@@ -173,7 +177,8 @@ export default function Beat({ src = "/music/track.mp3" }) {
           this.minChartValue * CORE_BASE_SCALE +
           coreBandVal[d] *
             (this.maxChartValue - this.minChartValue) *
-            CORE_BASE_SCALE;
+            CORE_BASE_SCALE *
+            CORE_MOTION;
         coreData.push([coreR, (360 / POINTS) * j]);
       }
       data.push([data[0][0], 360]); // stäng cirkeln (samma värde som j=0, ingen spets)
