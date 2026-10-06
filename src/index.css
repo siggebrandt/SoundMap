@@ -4,6 +4,10 @@
   --text: #6b6375;
   --text-h: #08060d;
   --bg: #fff;
+  /* Put your image in public/ and adjust these values to position it. */
+  --page-background-image: url("/background.jpg");
+  --page-background-position: 50% 50%;
+  --page-background-size: cover;
   --border: #e5e4e7;
   --code-bg: #f4f3ec;
   --accent: #aa3bff;
@@ -54,6 +58,14 @@
 
 body {
   margin: 0;
+  background-color: #111;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)),
+    var(--page-background-image);
+  background-position: center, var(--page-background-position);
+  background-size: cover, var(--page-background-size);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 #root {

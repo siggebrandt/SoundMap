@@ -183,7 +183,7 @@ export default function Beat({ src = "/music/track.mp3" }) {
           position: "relative",
           width: SIZE,
           height: SIZE,
-          background: "#111",
+          background: "transparent",
         }}
       >
         <div ref={elRef} style={{ width: "100%", height: "100%" }} />
