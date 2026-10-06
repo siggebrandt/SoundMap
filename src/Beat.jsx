@@ -6,7 +6,8 @@ const SIZE = 600;
 const POINTS = 48; // måste vara jämnt
 const MIN_R = 100;
 const MAX_R = 240;
-const INNER_MOTION = 0.15;
+const INNER_BASE_SCALE = 0.95;
+const INNER_MOTION = 0.2;
 const SMOOTH = 0.35;
 const INNER_SMOOTH = 0.8;
 const LINE_WIDTH = 2;
@@ -87,7 +88,10 @@ export default function Beat({ src = "/music/track.mp3" }) {
         shadowColor: INNER_COLOR,
         shadowBlur: 12,
       },
-      data: Array.from({ length: 361 }, (_, a) => [MIN_R, a]),
+      data: Array.from(
+        { length: 361 },
+        (_, a) => [MIN_R * INNER_BASE_SCALE, a],
+      ),
       silent: true,
       hoverAnimation: false,
       z: 3,
@@ -118,9 +122,10 @@ export default function Beat({ src = "/music/track.mp3" }) {
         if (r > maxR) maxR = r;
         data.push([r, (360 / POINTS) * j]);
         const innerR =
-          this.minChartValue +
+          this.minChartValue * INNER_BASE_SCALE +
           bandVal[d] *
             (this.maxChartValue - this.minChartValue) *
+            INNER_BASE_SCALE *
             INNER_MOTION;
         innerData.push([innerR, (360 / POINTS) * j]);
       }
