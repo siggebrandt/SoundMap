@@ -3,15 +3,14 @@ import { useEffect, useRef, useState } from "react";
 const COLOR = "rgba(255, 126, 182, 0.55)"; // används av både linje och kärna
 const INNER_COLOR = "rgba(255, 126, 182, 0.10)";
 const CORE_COLOR = "rgba(194, 155, 255, 0.18)";
-const SIZE = 100;
-const POINTS = 48; // måste vara jämnt
-const MIN_R = 100;
-const MAX_R = 240;
-const OUTER_MOTION = 1.25;
+const SIZE = 300;
+const POINTS = 96; // måste vara jämnt
+const BASE_SIZE_SCALE = 1.25;
+const BASE_RADIUS = SIZE * 0.09;
+const MAX_RADIUS = (SIZE / 2 - 18) / BASE_SIZE_SCALE;
 const INNER_BASE_SCALE = 0.75;
-const INNER_MOTION = 1.25;
-const SMOOTH = 0.35;
-const INNER_SMOOTH = 0.8;
+const SMOOTH = 0.45;
+const INNER_SMOOTH = 0.7;
 const LINE_WIDTH = 0;
 
 // Formen på linjen
@@ -22,14 +21,12 @@ const INNER_BIN_HI = 30;
 const CORE_BIN_LO = 1;
 const CORE_BIN_HI = 6;
 const CORE_BASE_SCALE = 0.48;
-const CORE_MOTION = 1.25;
 const TILT = 0.5; // var 1.2
 const FLOOR = 0.45; // allt under denna nivå (0–1) räknas som tyst
-const CURVE = 2.0; // >1 trycker ner små värden så toppar sticker ut
+const CURVE = 1.5;
 const GAIN = 0.7; // total förstärkning av utslagen
+const SHARED_BEAT_INFLUENCE = 0.3;
 // =========================
-
-const AXIS_MAX = MAX_R + 50;
 
 // Härledda värden: måste ligga efter konstanterna ovan
 const HALF = POINTS / 2;
@@ -56,6 +53,20 @@ const getBandValues = (freq, ranges) =>
     return Math.min(1, value);
   });
 
+const smoothBandValues = (values) =>
+  values.map((value, index) => {
+    const previous = values[Math.max(0, index - 1)];
+    const next = values[Math.min(values.length - 1, index + 1)];
+    return (previous + 2 * value + next) / 4;
+  });
+
+const blendWithOuterBeat = (values, outerValues) =>
+  values.map(
+    (value, index) =>
+      value * (1 - SHARED_BEAT_INFLUENCE) +
+      outerValues[index] * SHARED_BEAT_INFLUENCE,
+  );
+
 export default function Beat({ src = "/music/track.mp3" }) {
   const elRef = useRef(null);
   const waveRef = useRef(null);
@@ -73,16 +84,20 @@ export default function Beat({ src = "/music/track.mp3" }) {
 
     const el = elRef.current;
     const wave = new Wave(el, { loop: true });
-    wave.minChartValue = MIN_R;
-    wave.maxChartValue = MAX_R;
+    wave.minChartValue = 0;
+    wave.maxChartValue = MAX_RADIUS;
 
     const opt = wave.chartOption;
-    opt.radiusAxis.max = AXIS_MAX;
+    opt.radiusAxis.min = 0;
+    opt.radiusAxis.max = SIZE / 2;
     opt.backgroundColor = "transparent";
     opt.polar.backgroundColor = "transparent";
 
     // Fyll området innanför vågformen och behåll en tydlig ytterlinje.
-    opt.series[0].data = Array.from({ length: 361 }, (_, a) => [MIN_R, a]);
+    opt.series[0].data = Array.from({ length: 361 }, (_, a) => [
+      BASE_RADIUS * BASE_SIZE_SCALE,
+      a,
+    ]);
     opt.series[0].smooth = SMOOTH;
     opt.series[0].areaStyle = {
       color: COLOR,
@@ -115,7 +130,7 @@ export default function Beat({ src = "/music/track.mp3" }) {
         shadowBlur: 12,
       },
       data: Array.from({ length: 361 }, (_, a) => [
-        MIN_R * INNER_BASE_SCALE,
+        BASE_RADIUS * BASE_SIZE_SCALE * INNER_BASE_SCALE,
         a,
       ]),
       silent: true,
@@ -139,7 +154,7 @@ export default function Beat({ src = "/music/track.mp3" }) {
         shadowBlur: 12,
       },
       data: Array.from({ length: 361 }, (_, a) => [
-        MIN_R * CORE_BASE_SCALE,
+        BASE_RADIUS * BASE_SIZE_SCALE * CORE_BASE_SCALE,
         a,
       ]),
       silent: true,
@@ -148,9 +163,16 @@ export default function Beat({ src = "/music/track.mp3" }) {
     });
 
     wave._generateWaveData = function (freq) {
-      const bandVal = getBandValues(freq, bandRanges);
-      const innerBandVal = getBandValues(freq, innerBandRanges);
-      const coreBandVal = getBandValues(freq, coreBandRanges);
+      const bandVal = smoothBandValues(getBandValues(freq, bandRanges));
+      const innerBandVal = smoothBandValues(
+        blendWithOuterBeat(
+          getBandValues(freq, innerBandRanges),
+          bandVal,
+        ),
+      );
+      const coreBandVal = smoothBandValues(
+        blendWithOuterBeat(getBandValues(freq, coreBandRanges), bandVal),
+      );
 
       // 2. Spegla runt cirkeln: band 0 (bas) nederst, högsta bandet överst
       const data = [];
@@ -160,25 +182,20 @@ export default function Beat({ src = "/music/track.mp3" }) {
       for (let j = 0; j < POINTS; j++) {
         const d = Math.abs(j - HALF); // 0 = nederst, HALF = överst
         const r =
-          bandVal[d] *
-            (this.maxChartValue - this.minChartValue) *
-            OUTER_MOTION +
-          this.minChartValue;
+          (BASE_RADIUS + bandVal[d] * (MAX_RADIUS - BASE_RADIUS)) *
+          BASE_SIZE_SCALE;
         if (r > maxR) maxR = r;
         data.push([r, (360 / POINTS) * j]);
         const innerR =
-          this.minChartValue * INNER_BASE_SCALE +
-          innerBandVal[d] *
-            (this.maxChartValue - this.minChartValue) *
-            INNER_BASE_SCALE *
-            INNER_MOTION;
+          (BASE_RADIUS +
+            innerBandVal[d] * (MAX_RADIUS - BASE_RADIUS)) *
+          BASE_SIZE_SCALE *
+          INNER_BASE_SCALE;
         innerData.push([innerR, (360 / POINTS) * j]);
         const coreR =
-          this.minChartValue * CORE_BASE_SCALE +
-          coreBandVal[d] *
-            (this.maxChartValue - this.minChartValue) *
-            CORE_BASE_SCALE *
-            CORE_MOTION;
+          (BASE_RADIUS + coreBandVal[d] * (MAX_RADIUS - BASE_RADIUS)) *
+          BASE_SIZE_SCALE *
+          CORE_BASE_SCALE;
         coreData.push([coreR, (360 / POINTS) * j]);
       }
       data.push([data[0][0], 360]); // stäng cirkeln (samma värde som j=0, ingen spets)
